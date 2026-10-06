@@ -1,16 +1,36 @@
-# React + Vite
+# MakeCV
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite + Tailwind 4 + React Router. CV builder with **separate renderers per output**:
+HTML preview (`Preview.jsx`) and PDF (`Pdf.jsx`, @react-pdf/renderer) so neither is squeezed to match the other.
 
-Currently, two official plugins are available:
+```bash
+npm install && npm run dev
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Structure
+```
+src/
+  app/        router + providers
+  config/     routes, paper sizes, fonts
+  context/    CvContext (state, localStorage persistence)
+  data/       default CV + settings
+  features/   editor (form, toolbar) · preview · export
+  pages/      Landing, Templates, Editor, NotFound
+  templates/  one folder per template (auto-registered)
+  lib/        text + download helpers
+```
 
-## React Compiler
+## Add a template (no other file changes)
+1. Copy `src/templates/modern` to `src/templates/<id>`.
+2. Edit `Preview.jsx` + CSS (screen) and `Pdf.jsx` (PDF). Keep `index.js` exporting `{ id, name, order, accents, Preview, Pdf }`.
+It appears in the gallery, editor and every export automatically (`import.meta.glob`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Add an export format
+Create `src/features/export/exporters/<id>.js(x)` exporting `{ id, label, hint, ext, run({cv,settings,template}) => Blob }`, then add it to `exporters/index.js`.
 
-## Expanding the ESLint configuration
+## Add a page / feature
+Add the path in `config/routes.js`, the page in `pages/`, and the route in `app/router.jsx`. New CV fields: extend `data/defaultCv.js`, `features/editor/steps.js`, then render them in templates.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Notes
+- PDF fonts: built-ins (Helvetica/Times). For custom fonts call `Font.register` in `config/fonts.js`.
+- PNG/JPG capture the preview sheet as one image; the PDF paginates automatically.
