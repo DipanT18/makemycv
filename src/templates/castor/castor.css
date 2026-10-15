@@ -1,0 +1,4 @@
+.tpl-castor{display:grid;grid-template-columns:30% 1fr;min-height:inherit}
+.tpl-castor aside{background:#efe9e1;padding:2.4em 1.5em;font-size:.85em}.tpl-castor aside h2{font-size:1.25em;font-weight:500;margin-bottom:.5em}
+.tpl-castor main{padding:2.6em 2.4em}.tpl-castor h1{font-size:2.3em;text-transform:uppercase}.tpl-castor .t{color:var(--ac);font-size:1.4em;margin:.4em 0 .8em}
+.tpl-castor main h2{font-size:1.45em;font-weight:500}.tpl-castor .org{color:var(--ac)}

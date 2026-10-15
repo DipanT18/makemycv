@@ -1,0 +1,6 @@
+@import "./modern/modern.css";
+@import "./classic/classic.css";
+@import "./castor/castor.css";
+.paper .row{display:flex;justify-content:space-between;gap:1em}.paper .row i{font-style:normal;font-size:.9em;color:#6b7488;white-space:nowrap}
+.paper .ent{margin-bottom:.9em}.paper .org{color:#4a5368}.paper p{margin:.2em 0}.paper .bl:before{content:"· "}
+.paper h1,.paper h2{margin:0;font-weight:700}.paper .blk{margin-bottom:1.4em}
