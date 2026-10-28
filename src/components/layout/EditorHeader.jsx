@@ -107,7 +107,7 @@ export default function EditorHeader() {
 
         <a
           className="oss sm"
-          href="https://github.com/DipanT18/makemycv.git"
+          href="https://github.com/makemycv/makemycv.git"
           target="_blank"
           rel="noopener noreferrer"
         >
