@@ -41,8 +41,8 @@ export default function LandingPage() {
       {/* Top Navigation Bar */}
       <nav className="top">
         <Link to="/" className="logo">
-          <i />
-          MakeCV
+          <img src="/logo.png" alt="MakeCV logo" />
+          MakeMyCV
         </Link>
         <div>
           <Link to="/templates">Templates</Link>

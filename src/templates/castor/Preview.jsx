@@ -6,7 +6,7 @@ export default function Preview({ cv }) {
     <div className="tpl-castor">
       <aside>
         <div>{contact(p).map((c) => <p key={c} style={{ wordBreak: 'break-all' }}>{c}</p>)}</div>
-        <Lines title="Languages" items={tags(cv.languages)} /><Lines title="Interests" items={tags(cv.interests)} /><Lines title="IT skills" items={tags(cv.skills)} />
+        <Lines title="Languages" items={tags(cv.languages)} /><Lines title="Interests" items={tags(cv.interests)} /><Lines title="Skills" items={tags(cv.skills)} />
       </aside>
       <main>
         <h1>{p.name}</h1><p className="t">{p.title}</p><p>{p.summary}</p>
