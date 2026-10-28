@@ -1,36 +1,61 @@
-# MakeCV
+# MakeMyCV
 
-React + Vite + Tailwind 4 + React Router. CV builder with **separate renderers per output**:
-HTML preview (`Preview.jsx`) and PDF (`Pdf.jsx`, @react-pdf/renderer) so neither is squeezed to match the other.
+<p align="center">
+  <strong>Build your CV. Preview it instantly. Make it professional.</strong>
+  <br />
+  A simple, modern CV builder for students and professionals.
+  <br /><br />
+  <a href="https://makemycv.github.io/">Live Demo</a> · <a href="#features">Features</a> · <a href="#getting-started">Getting Started</a> · <a href="#contributing">Contributing</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Open%20Source-Contributions%20Welcome-brightgreen?style=flat-square" alt="Contributions welcome" />
+</p>
+
+## Overview
+
+MakeMyCV helps you create, customize, and export a professional CV without unnecessary complexity. Edit your information and see your CV take shape in real time.
+
+## Features
+
+- **Live Preview** — See changes as you edit.
+- **Flexible Customization** — Organize your profile, education, experience, and skills.
+- **Templates & Themes** — Create a CV that suits your style.
+- **Export Options** — Download and share your finished CV.
+- **Local-First Experience** — Build your CV directly in your browser.
+
+## Getting Started
 
 ```bash
-npm install && npm run dev
+git clone https://github.com/makemycv/makemycv.github.io.git
+cd makemycv.github.io
+npm install
+npm run dev
 ```
 
-## Structure
-```
-src/
-  app/        router + providers
-  config/     routes, paper sizes, fonts
-  context/    CvContext (state, localStorage persistence)
-  data/       default CV + settings
-  features/   editor (form, toolbar) · preview · export
-  pages/      Landing, Templates, Editor, NotFound
-  templates/  one folder per template (auto-registered)
-  lib/        text + download helpers
-```
+## Tech Stack
 
-## Add a template (no other file changes)
-1. Copy `src/templates/modern` to `src/templates/<id>`.
-2. Edit `Preview.jsx` + CSS (screen) and `Pdf.jsx` (PDF). Keep `index.js` exporting `{ id, name, order, accents, Preview, Pdf }`.
-It appears in the gallery, editor and every export automatically (`import.meta.glob`).
+React · JavaScript · CSS · Browser APIs
 
-## Add an export format
-Create `src/features/export/exporters/<id>.js(x)` exporting `{ id, label, hint, ext, run({cv,settings,template}) => Blob }`, then add it to `exporters/index.js`.
+## Contributing
 
-## Add a page / feature
-Add the path in `config/routes.js`, the page in `pages/`, and the route in `app/router.jsx`. New CV fields: extend `data/defaultCv.js`, `features/editor/steps.js`, then render them in templates.
+MakeMyCV is open to community contributions. Ideas, bug reports, feature requests, and pull requests are welcome.
 
-## Notes
-- PDF fonts: built-ins (Helvetica/Times). For custom fonts call `Font.register` in `config/fonts.js`.
-- PNG/JPG capture the preview sheet as one image; the PDF paginates automatically.
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes and test them.
+4. Open a pull request with a clear description.
+
+## License
+
+See [LICENSE](LICENSE) for the project's licensing terms.
+
+---
+
+<p align="center">
+  <strong>Make your next opportunity count.</strong>
+  <br />
+  Built with care for the community.
+</p>
