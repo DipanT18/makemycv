@@ -1,20 +1,127 @@
-import { Link } from 'react-router-dom'
-import { FileText, Pencil } from 'lucide-react'
-import { ROUTES } from '@/config/routes'
-import { useCv } from '@/context/CvContext'
-import { getTemplate } from '@/templates'
-import ExportMenu from '@/features/export/ExportMenu'
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useCV } from '@/context/CvContext';
+import { ThemeDropdown } from '@/context/ThemeContext';
+import Icon from '@/components/common/Icon';
+import ExportDropdown from '@/components/common/ExportDropdown';
+import { PS } from '@/config/constants'
+
 export default function EditorHeader() {
-  const { settings } = useCv()
+  const navigate = useNavigate()
+
+  const {
+    settings,
+    setZoom,
+    currentTemplateObj, 
+    setIsTemplateModalOpen,
+  } = useCV()
+
+  const handleZoomOut = () => {
+    setZoom((z) => +(z - 0.1).toFixed(2))
+  }
+
+  const handleZoomIn = () => {
+    setZoom((z) => +(z + 0.1).toFixed(2))
+  }
+
+  const handleResetZoom = () => {
+    const rightEl = document.getElementbyId('right')
+    if(rightEL) {
+      const w = rightEl.clientwidth - 52
+      const paperW = PS[settings.size || 'a4']?.[0] || 794
+      const nextz = w > 0 ? Math.min(1, Math.max(0.4, +(w / paperW).toFixed(2))) : 1
+      setZoom(nextz)
+    } else {
+      setZoom(1)
+    }
+  }
+
   return (
-    <header className="z-30 flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6">
-      <Link to={ROUTES.home} className="flex items-center gap-2 text-lg font-semibold">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white"><FileText size={16} /></span>MakeCV
-      </Link>
-      <Link to={ROUTES.templates} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50">
-        <Pencil size={14} className="text-slate-400" /><b className="font-medium">Template</b><span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-blue-700">{getTemplate(settings.template).name}</span>
-      </Link>
-      <ExportMenu />
+    <header className="hd" id="hd">
+      {/* Left: Brand & Live indicator */}
+      <div className="l">
+        <button
+          type="button"
+          className="brand"
+          onClick={() => navigate('/')}
+          aria-label="MakeCV home"
+        >
+          <span className="bi">
+            <Icon name="file" size={16} />
+          </span>
+          <span className="sm">MakeCV</span>
+        </button>
+        <span className="live sm">Live</span>
+      </div>
+
+      {/* Middle: Template picker trigger */}
+      <div className="md">
+        <button
+          type="button"
+          className="ddt"
+          id="tOpen"
+          aria-haspopup="dialog"
+          onClick={() => setIsTemplateModalOpen(true)}
+        >
+          <Icon name="pen" size={14} />
+          <b>Template</b>
+          <span className="tag" id="tTag">
+            {currentTemplateObj?.name || 'Modern Tech'}
+          </span>
+        </button>
+      </div>
+
+      {/* Right: Zoom controls, Github, Export, Theme */}
+      <div className="rt">
+        <div className="zc lg">
+          <button
+            type="button"
+            id="zm"
+            title="Zoom out"
+            aria-label="Zoom out"
+            onClick={handleZoomOut}
+          >
+            <Icon name="zo" size={15} />
+          </button>
+          <output id="zo">{Math.round((settings.z || 1) * 100)}%</output>
+          <button
+            type="button"
+            id="zp"
+            title="Zoom in"
+            aria-label="Zoom in"
+            onClick={handleZoomIn}
+          >
+            <Icon name="zi" size={15} />
+          </button>
+          <i />
+          <button
+            type="button"
+            id="zr"
+            title="Reset view"
+            aria-label="Reset view"
+            onClick={handleResetZoom}
+          >
+            <Icon name="rot" size={15} />
+          </button>
+        </div>
+
+        <a
+          className="oss sm"
+          href="https://github.com/abhiabhish3k/MakeCV.git"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon name="code" size={15} />
+          <span style={{ font: 'inherit', background: 'none', padding: 0 }}>
+            Open Source
+          </span>
+          <span>1.4k ★</span>
+        </a>
+
+        <ExportDropdown />
+
+        <ThemeDropdown />
+      </div>
     </header>
   )
 }
