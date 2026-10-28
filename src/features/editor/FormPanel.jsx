@@ -1,36 +1,260 @@
-import { useState } from 'react'
+import React, { useRef } from 'react'
 import { useCv } from '@/context/CvContext'
-import { STEPS } from './steps'
-import Field from './Field'
+import { STEP_DEFINITIONS } from '@/config/constants'
+import { executeExport } from '@/lib/exportUtils'
 
-// Layout: step tabs (top) / scrolling fields / Back-Next (pinned bottom) so the preview never scrolls away.
 export default function FormPanel() {
-  const { cv, dispatch } = useCv()
-  const [i, setI] = useState(0)
-  const step = STEPS[i]
+  const {
+    profile,
+    sections,
+    activeStep,
+    setActiveStep,
+    updateProfile,
+    updateSectionEntry,
+    addSectionEntry,
+    removeSectionEntry,
+    settings,
+    showToast
+  } = useCv()
+
+  const fbodyRef = useRef(null)
+  const currentStepDef = STEP_DEFINITIONS[activeStep]
+
+  const handleNext = () => {
+    if (activeStep < STEP_DEFINITIONS.length - 1) {
+      setActiveStep(activeStep + 1)
+      if (fbodyRef.current) fbodyRef.current.scrollTop = 0
+    } else {
+      // Last step: "Finish & download"
+      executeExport('pdf', { profile, sections, settings, showToast })
+    }
+  }
+
+  const handleBack = () => {
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1)
+      if (fbodyRef.current) fbodyRef.current.scrollTop = 0
+    }
+  }
+
+  const handleAddEntry = (sectionKey) => {
+    addSectionEntry(sectionKey)
+    setTimeout(() => {
+      if (fbodyRef.current) {
+        fbodyRef.current.scrollTop = fbodyRef.current.scrollHeight
+      }
+    }, 50)
+  }
+
   return (
-    <div className="flex min-h-0 flex-col border-r border-slate-200 bg-white">
-      <nav className="flex gap-1 overflow-x-auto px-5 pt-4">
-        {STEPS.map((s, n) => <button key={s.id} onClick={() => setI(n)} className={`flex-1 whitespace-nowrap border-b-4 px-2 py-2 text-xs ${n === i ? 'border-slate-900 font-bold' : n < i ? 'border-blue-600 text-slate-500' : 'border-slate-200 text-slate-500'}`}>{s.title}</button>)}
-      </nav>
-      <div className="flex-1 space-y-3 overflow-y-auto p-6">
-        <h2 className="text-2xl font-bold">{step.title}</h2>
-        {step.kind === 'profile' && step.fields.map(([k, l, t]) => <Field key={k} label={l} textarea={t === 'textarea'} value={cv.profile[k]} onChange={(value) => dispatch({ type: 'profile', field: k, value })} />)}
-        {step.kind === 'fields' && step.fields.map(([k, l]) => <Field key={k} label={l} value={cv[k]} onChange={(value) => dispatch({ type: 'field', key: k, value })} />)}
-        {step.kind === 'entries' && (<>
-          {cv[step.section].map((e, n) => (
-            <div key={e.id} className="space-y-2 rounded-xl border border-slate-200 p-4">
-              <div className="flex justify-between text-sm font-semibold"><span>{step.title} {n + 1}</span>
-                {cv[step.section].length > 1 && <button className="text-xs text-red-600" onClick={() => dispatch({ type: 'removeEntry', section: step.section, id: e.id })}>Remove</button>}</div>
-              {['title', 'org', 'dates', 'details'].map((f, k) => <Field key={f} label={step.labels[k]} textarea={f === 'details'} value={e[f]} onChange={(value) => dispatch({ type: 'entry', section: step.section, id: e.id, field: f, value })} />)}
-            </div>))}
-          <button onClick={() => dispatch({ type: 'addEntry', section: step.section })} className="w-full rounded-lg border border-dashed border-slate-300 py-2 text-sm text-slate-500 hover:bg-slate-50">+ Add another</button>
-        </>)}
+    <div className="left">
+      {/* Steps navigation bar */}
+      <div className="steps" id="steps">
+        {STEP_DEFINITIONS.map((s, idx) => {
+          let stepClass = ''
+          if (idx === activeStep) stepClass = 'on'
+          else if (idx < activeStep) stepClass = 'done'
+
+          return (
+            <button
+              key={s.id}
+              type="button"
+              className={stepClass}
+              onClick={() => {
+                setActiveStep(idx)
+                if (fbodyRef.current) fbodyRef.current.scrollTop = 0
+              }}
+            >
+              {s.label}
+            </button>
+          )
+        })}
       </div>
-      <div className="flex items-center justify-between border-t border-slate-200 px-6 py-3">
-        <button disabled={i === 0} onClick={() => setI(i - 1)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold disabled:invisible">Back</button>
-        <span className="text-xs text-slate-500">Step {i + 1} of {STEPS.length}</span>
-        <button disabled={i === STEPS.length - 1} onClick={() => setI(i + 1)} className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">Next</button>
+
+      {/* Form content scroll body */}
+      <div className="fbody" id="fbody" ref={fbodyRef}>
+        <h2>{currentStepDef.title}</h2>
+        <p>{currentStepDef.subtitle}</p>
+
+        {/* Profile-type step (Personal, Summary, Skills) */}
+        {currentStepDef.type === 'profile' && (
+          <div className="g2">
+            {currentStepDef.fields.map(([fKey, fLabel, fType]) => {
+              const isFull = fType === 'full' || fType === 'ta'
+              const isTextarea = fType === 'ta'
+              const val = profile[fKey] || ''
+
+              return (
+                <div key={fKey} className={`fld ${isFull ? 'full' : ''}`}>
+                  <label htmlFor={`f_${fKey}`}>{fLabel}</label>
+                  {isTextarea ? (
+                    <textarea
+                      id={`f_${fKey}`}
+                      className="sm"
+                      value={val}
+                      onChange={(e) => updateProfile(fKey, e.target.value)}
+                    />
+                  ) : (
+                    <input
+                      id={`f_${fKey}`}
+                      type="text"
+                      value={val}
+                      onChange={(e) => updateProfile(fKey, e.target.value)}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Entry-type step (Experience, Education, Projects) */}
+        {currentStepDef.type === 'entries' && (
+          <div>
+            {sections[currentStepDef.sectionKey]?.map((item, idx) => {
+              const canRemove = sections[currentStepDef.sectionKey].length > 1
+
+              return (
+                <div key={item.id} className="ecard">
+                  <div className="eh">
+                    <b>
+                      {currentStepDef.itemSingular.charAt(0).toUpperCase() +
+                        currentStepDef.itemSingular.slice(1)}{' '}
+                      {idx + 1}
+                    </b>
+                    {canRemove && (
+                      <button
+                        type="button"
+                        className="rm"
+                        onClick={() =>
+                          removeSectionEntry(currentStepDef.sectionKey, item.id)
+                        }
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="g2">
+                    {/* Title */}
+                    <div className="fld">
+                      <label htmlFor={`f_${currentStepDef.sectionKey}_${item.id}_t`}>
+                        {currentStepDef.labels[0]}
+                      </label>
+                      <input
+                        id={`f_${currentStepDef.sectionKey}_${item.id}_t`}
+                        type="text"
+                        value={item.t || ''}
+                        onChange={(e) =>
+                          updateSectionEntry(
+                            currentStepDef.sectionKey,
+                            item.id,
+                            't',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+
+                    {/* Organization / Subtitle */}
+                    <div className="fld">
+                      <label htmlFor={`f_${currentStepDef.sectionKey}_${item.id}_o`}>
+                        {currentStepDef.labels[1]}
+                      </label>
+                      <input
+                        id={`f_${currentStepDef.sectionKey}_${item.id}_o`}
+                        type="text"
+                        value={item.o || ''}
+                        onChange={(e) =>
+                          updateSectionEntry(
+                            currentStepDef.sectionKey,
+                            item.id,
+                            'o',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+
+                    {/* Dates */}
+                    <div className="fld full">
+                      <label htmlFor={`f_${currentStepDef.sectionKey}_${item.id}_d`}>
+                        {currentStepDef.labels[2]}
+                      </label>
+                      <input
+                        id={`f_${currentStepDef.sectionKey}_${item.id}_d`}
+                        type="text"
+                        value={item.d || ''}
+                        onChange={(e) =>
+                          updateSectionEntry(
+                            currentStepDef.sectionKey,
+                            item.id,
+                            'd',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+
+                    {/* Details / Bullets */}
+                    <div className="fld full">
+                      <label htmlFor={`f_${currentStepDef.sectionKey}_${item.id}_x`}>
+                        {currentStepDef.labels[3]}
+                      </label>
+                      <textarea
+                        id={`f_${currentStepDef.sectionKey}_${item.id}_x`}
+                        className="sm"
+                        value={item.x || ''}
+                        onChange={(e) =>
+                          updateSectionEntry(
+                            currentStepDef.sectionKey,
+                            item.id,
+                            'x',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            <button
+              type="button"
+              className="add"
+              onClick={() => handleAddEntry(currentStepDef.sectionKey)}
+            >
+              + Add another {currentStepDef.itemSingular}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Pinned Bottom Footer */}
+      <div className="foot">
+        <button
+          type="button"
+          className="btn g"
+          id="back"
+          style={{ visibility: activeStep > 0 ? 'visible' : 'hidden' }}
+          onClick={handleBack}
+        >
+          Back
+        </button>
+        <small id="prog">
+          Step {activeStep + 1} of {STEP_DEFINITIONS.length}
+        </small>
+        <button
+          type="button"
+          className="btn p"
+          id="next"
+          onClick={handleNext}
+        >
+          {activeStep === STEP_DEFINITIONS.length - 1
+            ? 'Finish & download'
+            : 'Next'}
+        </button>
       </div>
     </div>
   )
