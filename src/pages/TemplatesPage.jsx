@@ -24,8 +24,8 @@ export default function TemplatesPage() {
       {/* Top Navigation */}
       <nav className="top">
         <Link to="/" className="logo">
-          <i />
-          MakeCV
+          <img src="/logo.png" alt="MakeMyCV logo" className="logo-img" />
+          MakeMyCV
         </Link>
         <div>
           <span className="thslot">

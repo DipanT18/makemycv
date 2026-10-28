@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCV } from '@/context/CvContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCv } from '@/context/CvContext';
 import { ThemeDropdown } from '@/context/ThemeContext';
 import Icon from '@/components/common/Icon';
 import ExportDropdown from '@/components/common/ExportDropdown';
@@ -14,7 +14,7 @@ export default function EditorHeader() {
     setZoom,
     currentTemplateObj, 
     setIsTemplateModalOpen,
-  } = useCV()
+  } = useCv()
 
   const handleZoomOut = () => {
     setZoom((z) => +(z - 0.1).toFixed(2))
@@ -46,10 +46,10 @@ export default function EditorHeader() {
           onClick={() => navigate('/')}
           aria-label="MakeCV home"
         >
-          <span className="bi">
-            <Icon name="file" size={16} />
-          </span>
-          <span className="sm">MakeCV</span>
+          <Link to="/" className="logo">
+            <img src="/logo.png" alt="MakeCV logo" className="logo-img" />
+                  MakeMyCV
+              </Link>
         </button>
         <span className="live sm">Live</span>
       </div>
@@ -107,7 +107,7 @@ export default function EditorHeader() {
 
         <a
           className="oss sm"
-          href="https://github.com/abhiabhish3k/MakeCV.git"
+          href="https://github.com/DipanT18/makemycv.git"
           target="_blank"
           rel="noopener noreferrer"
         >
