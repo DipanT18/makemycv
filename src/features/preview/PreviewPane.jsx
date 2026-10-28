@@ -1,24 +1,106 @@
-import { useState } from 'react'
-import { ZoomIn, ZoomOut } from 'lucide-react'
+import React, { useEffect, useRef, useLayoutEffect } from 'react'
 import { useCv } from '@/context/CvContext'
-import { getTemplate } from '@/templates'
-import { PAPER } from '@/config/paper'
-import PaperSheet from './PaperSheet'
+import Icon from '@/components/common/Icon'
+import { PS } from '@/config/constants'
+
 export default function PreviewPane() {
-  const { cv, settings } = useCv()
-  const [zoom, setZoom] = useState(0.85)
-  const [w, h] = PAPER[settings.paper].px
+  const {
+    layout,
+    settings,
+    setZoom,
+    currentPage,
+    totalPages,
+    prevPage,
+    nextPage
+  } = useCv()
+
+  const rightPaneRef = useRef(null)
+  const paperContainerRef = useRef(null)
+
+  // Auto-fit function
+  const autoFit = () => {
+    if (!rightPaneRef.current) return
+    const w = rightPaneRef.current.clientWidth - 52
+    const paperWidth = PS[settings.size || 'a4']?.[0] || 794
+    if (w > 0) {
+      const fittedZoom = Math.min(1, Math.max(0.4, +(w / paperWidth).toFixed(2)))
+      setZoom(fittedZoom)
+    }
+  }
+
+  useLayoutEffect(() => {
+    autoFit()
+    const timer = setTimeout(autoFit, 100)
+    window.addEventListener('resize', autoFit)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', autoFit)
+    }
+  }, [settings.size])
+
+  // Apply layout html and page scroll offset
+  useEffect(() => {
+    if (!paperContainerRef.current) return
+    const sheetEl = paperContainerRef.current.querySelector('.sheet2')
+    if (sheetEl) {
+      const cvEl = sheetEl.querySelector('.cv')
+      if (cvEl) {
+        cvEl.style.position = 'absolute'
+        cvEl.style.left = '0'
+        cvEl.style.top = `-${currentPage * layout.H}px`
+      }
+    }
+  }, [layout.html, layout.H, currentPage])
+
+  const handlePrevPage = () => {
+    if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0
+    prevPage()
+  }
+
+  const handleNextPage = () => {
+    if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0
+    nextPage()
+  }
+
   return (
-    <div className="relative min-h-0 overflow-auto bg-slate-100 p-6">
-      <div className="sticky top-0 z-10 mb-3 flex w-fit items-center gap-1 rounded-lg border border-slate-200 bg-white p-0.5 text-xs">
-        <button onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}><ZoomOut size={15} /></button><span className="w-10 text-center font-mono">{Math.round(zoom * 100)}%</span><button onClick={() => setZoom((z) => Math.min(1.4, z + 0.1))}><ZoomIn size={15} /></button>
-      </div>
-      <div style={{ width: w * zoom, margin: '0 auto' }}>
-        <div className="relative shadow-xl" style={{ width: w, transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-          <PaperSheet id="cv-sheet" cv={cv} settings={settings} template={getTemplate(settings.template)} />
-          {/* page-break guides: a line every paper height (overlay, not part of the exported sheet) */}
-          <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${h - 1}px, #f87171 ${h - 1}px, #f87171 ${h}px)` }} />
+    <div className="rw">
+      <div className="right" id="right" ref={rightPaneRef}>
+        <div
+          id="paper"
+          ref={paperContainerRef}
+          style={{ zoom: settings.z || 1 }}
+        >
+          <div
+            className="sheet2"
+            style={{ width: `${layout.W}px`, height: `${layout.H}px` }}
+            dangerouslySetInnerHTML={{ __html: layout.html }}
+          />
         </div>
+      </div>
+
+      {/* Floating page controls */}
+      <div className="pg">
+        <button
+          type="button"
+          id="pp"
+          aria-label="Previous page"
+          disabled={currentPage <= 0}
+          onClick={handlePrevPage}
+        >
+          <Icon name="cl" size={20} />
+        </button>
+        <b id="pn">
+          {currentPage + 1}/{totalPages}
+        </b>
+        <button
+          type="button"
+          id="pnx"
+          aria-label="Next page"
+          disabled={currentPage >= totalPages - 1}
+          onClick={handleNextPage}
+        >
+          <Icon name="cr" size={20} />
+        </button>
       </div>
     </div>
   )
