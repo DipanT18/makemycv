@@ -1,25 +1,88 @@
-import { useNavigate } from 'react-router-dom'
-import { templates } from '@/templates'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCv } from '@/context/CvContext'
-import { ROUTES } from '@/config/routes'
-import TemplateThumb from '@/features/preview/TemplateThumb'
+import { ThemeDropdown } from '@/context/ThemeContext'
+import { TEMPLATES } from '@/config/constants'
+import { renderCvHtml } from '@/lib/cvRenderer'
+
 export default function TemplatesPage() {
-  const { cv, settings, dispatch } = useCv()
-  const nav = useNavigate()
-  const pick = (t, accent) => { dispatch({ type: 'settings', patch: { template: t.id, accent } }); nav(ROUTES.editor) }
+  const navigate = useNavigate()
+  const { profile, sections, updateSettings } = useCv()
+
+  useEffect(() => {
+    document.body.classList.remove('ed')
+    window.scrollTo(0, 0)
+  }, [])
+
+  const handleSelectTemplate = (templateId, accentColor) => {
+    updateSettings({ t: templateId, ac: accentColor })
+    navigate('/editor')
+  }
+
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <h1 className="text-4xl font-extrabold">Pick a starting point</h1>
-      {templates.map((t) => (
-        <section key={t.id} className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="mb-4 text-xl font-bold">{t.name}</h2>
-          <div className="flex flex-wrap gap-6">
-            {t.accents.map((a) => (
-              <button key={a} onClick={() => pick(t, a)} className="text-left transition hover:-translate-y-1">
-                <TemplateThumb cv={cv} template={t} settings={{ ...settings, template: t.id, accent: a }} /><span className="mt-2 block text-sm font-medium">Use this</span>
-              </button>))}
-          </div>
-        </section>))}
-    </main>
+    <div id="v2" className="view on">
+      {/* Top Navigation */}
+      <nav className="top">
+        <Link to="/" className="logo">
+          <i />
+          MakeCV
+        </Link>
+        <div>
+          <span className="thslot">
+            <ThemeDropdown />
+          </span>
+          <button
+            type="button"
+            className="btn g"
+            onClick={() => navigate('/')}
+          >
+            Back
+          </button>
+        </div>
+      </nav>
+
+      {/* Templates Content */}
+      <div className="wrap">
+        <h1>Pick a starting point</h1>
+        <p>You can switch layout and colors later from the editor.</p>
+
+        <div id="rows">
+          {TEMPLATES.map((tpl) => (
+            <div key={tpl.id} className="row">
+              <header>
+                <h2>{tpl.name}</h2>
+                <span>{tpl.desc}</span>
+              </header>
+              <div className="cards">
+                {tpl.accents.map(([accentCode, accentName]) => {
+                  const previewHtml = renderCvHtml(tpl.id, profile, sections)
+                  return (
+                    <button
+                      key={accentCode}
+                      type="button"
+                      className="card"
+                      onClick={() => handleSelectTemplate(tpl.id, accentCode)}
+                    >
+                      <div
+                        className="thumb"
+                        style={{ '--cac': accentCode }}
+                      >
+                        <div
+                          dangerouslySetInnerHTML={{ __html: previewHtml }}
+                        />
+                      </div>
+                      <b>
+                        {tpl.name} {accentName}
+                      </b>
+                      <small>Use this template</small>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
